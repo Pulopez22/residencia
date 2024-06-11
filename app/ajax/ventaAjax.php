@@ -29,12 +29,7 @@
 		if($_POST['modulo_venta']=="actualizar_producto"){
 			echo $insVenta->actualizarProductoCarritoControlador();
 		}
-
-		/*--------- Buscar cliente ---------*/
-		if($_POST['modulo_venta']=="buscar_cliente"){
-			echo $insVenta->buscarClienteVentaControlador();
-		}
-
+		
 		/*--------- Agregar cliente a carrito ---------*/
 		if($_POST['modulo_venta']=="agregar_cliente"){
 			echo $insVenta->agregarClienteVentaControlador();

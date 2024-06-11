@@ -1,6 +1,6 @@
 <div class="container is-fluid mb-6">
-	<h1 class="title">Clientes</h1>
-	<h2 class="subtitle"><i class="fas fa-male fa-fw"></i> &nbsp; Nuevo cliente</h2>
+	<h1 class="title">Proveedor</h1>
+	<h2 class="subtitle"><i class="fas fa-male fa-fw"></i> &nbsp; Nuevo proveedor</h2>
 </div>
 
 <div class="container pb-6 pt-6">
@@ -24,44 +24,39 @@
 		  	</div>
 		</div>
 		<div class="columns">
-			<div class="column">
-    			<div class="control">
-        			<label>RFC <?php echo CAMPO_OBLIGATORIO; ?></label>
-        			<input class="input" type="text" name="cliente_provincia" pattern="[A-Z0-9]{13}" maxlength="13" required>
-    			</div>
-			</div>
 		  	<div class="column">
-			  	<div class="control">
-   					<label>Telefono <?php echo CAMPO_OBLIGATORIO; ?></label>
-    				<input class="input" type="text" name="cliente_ciudad" maxlength="10" required>
+		    	<div class="control">
+					<label>Estado <?php echo CAMPO_OBLIGATORIO; ?></label>
+				  	<input class="input" type="text" name="cliente_provincia" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{4,30}" maxlength="30" required >
 				</div>
-
-				<script>
-    				document.addEventListener('DOMContentLoaded', function() {
-        			var inputTelefono = document.querySelector('input[name="cliente_ciudad"]');
-        			inputTelefono.addEventListener('input', function() {
-           			this.value = this.value.replace(/[^\d]/g, ''); // Eliminar todo excepto los dígitos
-        			});
-   				 });
-				</script>
-
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
 					<label>Ciudad <?php echo CAMPO_OBLIGATORIO; ?></label>
-				  	<input class="input" type="text" name="cliente_direccion" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ()]{4,70}" maxlength="70" required >
+				  	<input class="input" type="text" name="cliente_ciudad" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{4,30}" maxlength="30" required >
+				</div>
+		  	</div>
+		  	<div class="column">
+		    	<div class="control">
+					<label>Calle <?php echo CAMPO_OBLIGATORIO; ?></label>
+				  	<input class="input" type="text" name="cliente_direccion" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{4,70}" maxlength="70" required >
 				</div>
 		  	</div>
 		</div>
 		<div class="columns">
-    		<div class="column">
-        		<div class="control">
-            		<label>Calle</label>
-           			<input class="input" type="text" name="cliente_telefono" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]{4,70}">
-        		</div>
-    		</div>
+		  	<div class="column">
+		    	<div class="control">
+					<label>Teléfono</label>
+				  	<input class="input" type="text" name="cliente_telefono" maxlength="10" required title="Debe contener 10 dígitos numéricos" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+				</div>
+		  	</div>
+		  	<div class="column">
+		    	<div class="control">
+					<label>RFC</label>
+				  	<input class="input" type="text" name="cliente_email" pattern="[A-Z0-9]{13}" maxlength="13" required title="Debe contener 13 caracteres alfanuméricos" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+				</div>
+		  	</div>
 		</div>
-
 		<p class="has-text-centered">
 			<button type="reset" class="button is-link is-light is-rounded"><i class="fas fa-paint-roller"></i> &nbsp; Limpiar</button>
 			<button type="submit" class="button is-info is-rounded"><i class="far fa-save"></i> &nbsp; Guardar</button>

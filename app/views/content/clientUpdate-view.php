@@ -1,6 +1,6 @@
 <div class="container is-fluid mb-6">
-	<h1 class="title">Clientes</h1>
-	<h2 class="subtitle"><i class="fas fa-sync-alt"></i> &nbsp; Actualizar cliente</h2>
+	<h1 class="title">Proveedores</h1>
+	<h2 class="subtitle"><i class="fas fa-sync-alt"></i> &nbsp; Actualizar proveedor</h2>
 </div>
 
 <div class="container pb-6 pt-6">
@@ -16,33 +16,13 @@
 			$datos=$datos->fetch();
 	?>
 
-	<h2 class="title has-text-centered"><?php echo $datos['cliente_nombre']." ".$datos['cliente_apellido']." (".$datos['cliente_tipo_documento'].": ".$datos['cliente_numero_documento'].")"; ?></h2>
+	<h2 class="title has-text-centered"><?php echo $datos['cliente_nombre']." ".$datos['cliente_apellido']." "; ?></h2>
 
 	<form class="FormularioAjax" action="<?php echo APP_URL; ?>app/ajax/clienteAjax.php" method="POST" autocomplete="off" >
 
 		<input type="hidden" name="modulo_cliente" value="actualizar">
 		<input type="hidden" name="cliente_id" value="<?php echo $datos['cliente_id']; ?>">
 
-		<div class="columns">
-		  	<div class="column">
-		    	<div class="control">
-					<label>Tipo de documento <?php echo CAMPO_OBLIGATORIO; ?></label><br>
-				  	<div class="select">
-					  	<select name="cliente_tipo_documento">
-	                        <?php
-	                        	echo $insLogin->generarSelect(DOCUMENTOS_USUARIOS,$datos['cliente_tipo_documento']);
-	                        ?>
-					  	</select>
-					</div>
-				</div>
-		  	</div>
-		  	<div class="column">
-		    	<div class="control">
-					<label>Numero de documento <?php echo CAMPO_OBLIGATORIO; ?></label>
-				  	<input class="input" type="text" name="cliente_numero_documento" value="<?php echo $datos['cliente_numero_documento']; ?>" pattern="[a-zA-Z0-9-]{7,30}" maxlength="30" required >
-				</div>
-		  	</div>
-		</div>
 		<div class="columns">
 		  	<div class="column">
 		    	<div class="control">
@@ -73,21 +53,21 @@
 		  	<div class="column">
 		    	<div class="control">
 					<label>Calle o dirección de casa <?php echo CAMPO_OBLIGATORIO; ?></label>
-				  	<input class="input" type="text" name="cliente_direccion" value="<?php echo $datos['cliente_direccion']; ?>" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{4,70}" maxlength="70" required >
+				  	<input class="input" type="text" name="cliente_direccion" value="<?php echo $datos['cliente_direccion']; ?>" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{4,70}" maxlength="70" required >
 				</div>
 		  	</div>
 		</div>
 		<div class="columns">
 		  	<div class="column">
-		    	<div class="control">
+			  	<div class="control">
 					<label>Teléfono</label>
-				  	<input class="input" type="text" name="cliente_telefono" value="<?php echo $datos['cliente_telefono']; ?>" pattern="[0-9()+]{8,20}" maxlength="20" >
+				  	<input class="input" type="text" name="cliente_telefono" maxlength="10" required title="Debe contener 10 dígitos numéricos" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
 				</div>
 		  	</div>
 		  	<div class="column">
-		    	<div class="control">
-					<label>Email</label>
-				  	<input class="input" type="email" name="cliente_email" value="<?php echo $datos['cliente_email']; ?>" maxlength="70" >
+			  	<div class="control">
+					<label>RFC</label>
+				  	<input class="input" type="text" name="cliente_email" pattern="[A-Z0-9]{13}" maxlength="13" required title="Debe contener 13 caracteres alfanuméricos" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
 				</div>
 		  	</div>
 		</div>

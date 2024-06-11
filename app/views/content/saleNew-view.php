@@ -50,7 +50,7 @@
             ?>
             <div class="notification is-info is-light mb-2 mt-2">
                 <h4 class="has-text-centered has-text-weight-bold">Venta realizada</h4>
-                <p class="has-text-centered mb-2">La compra se realizó con éxito. ¿Que desea hacer a continuación? </p>
+                <p class="has-text-centered mb-2">La venta se realizó con éxito. ¿Que desea hacer a continuación? </p>
                 <br>
                 <div class="container">
                     <div class="columns">
@@ -105,7 +105,7 @@
                                     <input class="input sale_input-cant has-text-centered" value="<?php echo $productos['venta_detalle_cantidad']; ?>" id="sale_input_<?php echo str_replace(" ", "_", $productos['producto_codigo']); ?>" type="text" style="max-width: 80px;">
                                 </div>
                             </td>
-                            <td><?php echo MONEDA_SIMBOLO.number_format($productos['venta_detalle_precio_venta'],MONEDA_DECIMALES,MONEDA_SEPARADOR_DECIMAL,MONEDA_SEPARADOR_MILLAR)." ".MONEDA_NOMBRE; ?></td>
+                            <td><?php echo MONEDA_SIMBOLO.number_format($productos['venta_detalle_precio_compra'],MONEDA_DECIMALES,MONEDA_SEPARADOR_DECIMAL,MONEDA_SEPARADOR_MILLAR)." ".MONEDA_NOMBRE; ?></td>
                             <td><?php echo MONEDA_SIMBOLO.number_format($productos['venta_detalle_total'],MONEDA_DECIMALES,MONEDA_SEPARADOR_DECIMAL,MONEDA_SEPARADOR_MILLAR)." ".MONEDA_NOMBRE; ?></td>
                             <td>
                                 <button type="button" class="button is-success is-rounded is-small" onclick="actualizar_cantidad('#sale_input_<?php echo str_replace(" ", "_", $productos['producto_codigo']); ?>','<?php echo $productos['producto_codigo']; ?>')" >
@@ -159,7 +159,7 @@
             <hr>
 
             <?php if($_SESSION['venta_total']>0){ ?>
-            <form class="FormularioAjax" action="<?php echo APP_URL; ?>app/ajax/ventaAjax.php" method="POST" autocomplete="off" name="formsale" >
+            <form class="FormularioAjax" action="<?php echo APP_URL; ?>app/ajax/ventaAjax.php" method="POST" autocomplete="off" name="formsale">
                 <input type="hidden" name="modulo_venta" value="registrar_venta">
             <?php }else { ?>
             <form name="formsale">
@@ -170,54 +170,7 @@
                     <input class="input" type="date" value="<?php echo date("Y-m-d"); ?>" readonly >
                 </div>
 
-                <br>
-
-                <label>Cliente</label>
-                <?php
-                    if(isset($_SESSION['datos_cliente_venta']) && count($_SESSION['datos_cliente_venta'])>=1 && $_SESSION['datos_cliente_venta']['cliente_id']!=1){
-                ?>
-                <div class="field has-addons mb-5">
-                    <div class="control">
-                        <input class="input" type="text" readonly id="venta_cliente" value="<?php echo $_SESSION['datos_cliente_venta']['cliente_nombre']." ".$_SESSION['datos_cliente_venta']['cliente_apellido']; ?>" >
-                    </div>
-                    <div class="control">
-                        <a class="button is-danger" title="Remove cliente" id="btn_remove_client" onclick="remover_cliente(<?php echo $_SESSION['datos_cliente_venta']['cliente_id']; ?>)">
-                            <i class="fas fa-user-times fa-fw"></i>
-                        </a>
-                    </div>
-                </div>
-                <?php 
-                    }else{
-                        $datos_cliente=$insLogin->seleccionarDatos("Normal","cliente WHERE cliente_id='1'","*",0);
-                        if($datos_cliente->rowCount()==1){
-                            $datos_cliente=$datos_cliente->fetch();
-
-                            $_SESSION['datos_cliente_venta']=[
-                                "cliente_id"=>$datos_cliente['cliente_id'],
-                                "cliente_nombre"=>$datos_cliente['cliente_nombre'],
-                                "cliente_apellido"=>$datos_cliente['cliente_apellido']
-                            ];
-
-                        }else{
-                            $_SESSION['datos_cliente_venta']=[
-                                "cliente_id"=>1,
-                                "cliente_tipo_documento"=>"N/A",
-                                "cliente_numero_documento"=>"N/A",
-                                "cliente_nombre"=>"Publico",
-                                "cliente_apellido"=>"General"
-                            ];
-                        }
-                ?>
-                <div class="field has-addons mb-5">
-                    <div class="control">
-                        <input class="input" type="text" readonly id="venta_cliente" value="<?php echo $_SESSION['datos_cliente_venta']['cliente_nombre']." ".$_SESSION['datos_cliente_venta']['cliente_apellido']; ?>" >
-                    </div>
-                    <div class="control">
-                        <a class="button is-info js-modal-trigger" data-target="modal-js-client" title="Agregar cliente" id="btn_add_client" >
-                            <i class="fas fa-user-plus fa-fw"></i>
-                        </a>
-                    </div>
-                </div>
+               
                 <?php } ?>
 
                 <div class="control mb-5">
@@ -244,16 +197,6 @@
             </form>
         </div>
 
-    </div>
-    <?php }else{ ?>
-        <article class="message is-warning">
-             <div class="message-header">
-                <p>¡Ocurrio un error inesperado!</p>
-             </div>
-            <div class="message-body has-text-centered"><i class="fas fa-exclamation-triangle fa-2x"></i><br>No hemos podio seleccionar algunos datos sobre la empresa, por favor <a href="<?php echo APP_URL; ?>companyNew/" >verifique aquí los datos de la empresa</div>
-        </article>
-    <?php } ?>
-</div>
 
 <!-- Modal buscar producto -->
 <div class="modal" id="modal-js-product">
@@ -273,29 +216,6 @@
             <div class="container" id="tabla_productos"></div>
             <p class="has-text-centered">
                 <button type="button" class="button is-link is-light" onclick="buscar_codigo()" ><i class="fas fa-search"></i> &nbsp; Buscar</button>
-            </p>
-        </section>
-    </div>
-</div>
-
-<!-- Modal buscar cliente -->
-<div class="modal" id="modal-js-client">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title is-uppercase"><i class="fas fa-search"></i> &nbsp; Buscar y agregar cliente</p>
-          <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <div class="field mt-6 mb-6">
-                <label class="label">Documento, Nombre, Apellido, Teléfono</label>
-                <div class="control">
-                    <input class="input" type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" name="input_cliente" id="input_cliente" maxlength="30" >
-                </div>
-            </div>
-            <div class="container" id="tabla_clientes"></div>
-            <p class="has-text-centered">
-                <button type="button" class="button is-link is-light" onclick="buscar_cliente()" ><i class="fas fa-search"></i> &nbsp; Buscar</button>
             </p>
         </section>
     </div>
@@ -435,104 +355,6 @@
         }
     }
 
-
-    /*----------  Buscar cliente  ----------*/
-    function buscar_cliente(){
-        let input_cliente=document.querySelector('#input_cliente').value;
-
-        input_cliente=input_cliente.trim();
-
-        if(input_cliente!=""){
-
-            let datos = new FormData();
-            datos.append("buscar_cliente", input_cliente);
-            datos.append("modulo_venta", "buscar_cliente");
-
-            fetch('<?php echo APP_URL; ?>app/ajax/ventaAjax.php',{
-                method: 'POST',
-                body: datos
-            })
-            .then(respuesta => respuesta.text())
-            .then(respuesta =>{
-                let tabla_clientes=document.querySelector('#tabla_clientes');
-                tabla_clientes.innerHTML=respuesta;
-            });
-
-        }else{
-            Swal.fire({
-                icon: 'error',
-                title: 'Ocurrió un error inesperado',
-                text: 'Debes de introducir el Numero de documento, Nombre, Apellido o Teléfono del cliente',
-                confirmButtonText: 'Aceptar'
-            });
-        }
-    }
-
-
-    /*----------  Agregar cliente  ----------*/
-    function agregar_cliente(id){
-
-        Swal.fire({
-            title: '¿Quieres agregar este cliente?',
-            text: "Se va a agregar este cliente para realizar una venta",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Si, agregar',
-            cancelButtonText: 'No, cancelar'
-        }).then((result) => {
-            if (result.isConfirmed){
-
-                let datos = new FormData();
-                datos.append("cliente_id", id);
-                datos.append("modulo_venta", "agregar_cliente");
-
-                fetch('<?php echo APP_URL; ?>app/ajax/ventaAjax.php',{
-                    method: 'POST',
-                    body: datos
-                })
-                .then(respuesta => respuesta.json())
-                .then(respuesta =>{
-                    return alertas_ajax(respuesta);
-                });
-
-            }
-        });
-    }
-
-
-    /*----------  Remover cliente  ----------*/
-    function remover_cliente(id){
-
-        Swal.fire({
-            title: '¿Quieres remover este cliente?',
-            text: "Se va a quitar el cliente seleccionado de la venta",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Si, remover',
-            cancelButtonText: 'No, cancelar'
-        }).then((result) => {
-            if (result.isConfirmed){
-
-                let datos = new FormData();
-                datos.append("cliente_id", id);
-                datos.append("modulo_venta", "remover_cliente");
-
-                fetch('<?php echo APP_URL; ?>app/ajax/ventaAjax.php',{
-                    method: 'POST',
-                    body: datos
-                })
-                .then(respuesta => respuesta.json())
-                .then(respuesta =>{
-                    return alertas_ajax(respuesta);
-                });
-
-            }
-        });
-    }
 
     /*----------  Calcular cambio  ----------*/
     let venta_abono_input = document.querySelector("#venta_abono");

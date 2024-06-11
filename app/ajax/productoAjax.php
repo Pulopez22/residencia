@@ -6,31 +6,39 @@
 	
 	use app\controllers\productController;
 
+	// Asegurémonos de que estamos devolviendo JSON
+	header('Content-Type: application/json');
+
 	if(isset($_POST['modulo_producto'])){
 
 		$insProducto = new productController();
+		$response = null;
 
-		if($_POST['modulo_producto']=="registrar"){
-			echo $insProducto->registrarProductoControlador();
+		switch($_POST['modulo_producto']){
+			case "registrar":
+				$response = $insProducto->registrarProductoControlador();
+				break;
+			case "eliminar":
+				$response = $insProducto->eliminarProductoControlador();
+				break;
+			case "actualizar":
+				$response = $insProducto->actualizarProductoControlador();
+				break;
+			case "eliminarFoto":
+				$response = $insProducto->eliminarFotoProductoControlador();
+				break;
+			case "actualizarFoto":
+				$response = $insProducto->actualizarFotoProductoControlador();
+				break;
+			default:
+				$response = array("status" => "error", "message" => "Módulo de producto desconocido");
+				break;
 		}
 
-		if($_POST['modulo_producto']=="eliminar"){
-			echo $insProducto->eliminarProductoControlador();
-		}
-
-		if($_POST['modulo_producto']=="actualizar"){
-			echo $insProducto->actualizarProductoControlador();
-		}
-
-		if($_POST['modulo_producto']=="eliminarFoto"){
-			echo $insProducto->eliminarFotoProductoControlador();
-		}
-
-		if($_POST['modulo_producto']=="actualizarFoto"){
-			echo $insProducto->actualizarFotoProductoControlador();
-		}
+		echo json_encode($response);
 		
 	}else{
-		session_destroy();
-		header("Location: ".APP_URL."login/");
+		$response = array("status" => "error", "message" => "Solicitud no válida");
+		echo json_encode($response);
 	}
+?>

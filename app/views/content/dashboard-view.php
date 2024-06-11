@@ -39,12 +39,6 @@
 			      		<p class="title"><?php echo $total_usuarios->rowCount(); ?></p>
 			    	</a>
 			  	</div>
-				  <div class="level-item has-text-centered">
-				    <a href="<?php echo APP_URL; ?>clientList/">
-				      	<p class="heading"><i class="fas fa-address-book fa-fw"></i> &nbsp; Compras</p>
-				      	<p class="title"><?php echo $total_ventas->rowCount(); ?></p>
-				    </a>
-			  	</div>
 			  	<div class="level-item has-text-centered">
 				    <a href="<?php echo APP_URL; ?>clientList/">
 				      	<p class="heading"><i class="fas fa-address-book fa-fw"></i> &nbsp; Proveedor</p>

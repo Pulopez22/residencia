@@ -1,4 +1,11 @@
 <?php
+/*******************************************************************************
+* FPDF                                                                         *
+*                                                                              *
+* Version: 1.82                                                                *
+* Date:    2019-12-07                                                          *
+* Author:  Olivier PLATHEY                                                     *
+*******************************************************************************/
 
 define('FPDF_VERSION','1.82');
 
@@ -279,6 +286,33 @@ function Close()
 	$this->_endpage();
 	// Close document
 	$this->_enddoc();
+}
+
+function generatePDF($inventoryByCategory) {
+
+    // Crear una instancia de FPDF
+    $pdf = new FPDF();
+    $pdf->AddPage();
+
+    // Encabezado del reporte
+    $pdf->SetFont('Arial', 'B', 16);
+    $pdf->Cell(0, 10, 'Inventario Actual', 0, 1, 'C');
+    $pdf->Ln(10);
+
+    // Agregar los datos del inventario por categorías al PDF
+    foreach ($inventoryByCategory as $category => $totalInventory) {
+        $pdf->SetFont('Arial', '', 12);
+        // Concatenar el nombre de la categoría con el total de inventario
+        $text = "Categoria: $category - Total de Inventario: $totalInventory";
+        $pdf->Cell(0, 10, $text, 0, 1);
+    }
+
+    // Agregar el total del inventario al final del documento
+    $pdf->SetFont('Arial', 'B', 14);
+    $pdf->Cell(0, 10, 'Total de Inventario: ' . $inventoryByCategory['Total'], 0, 1, 'C');
+
+    // Guardar el PDF en el servidor
+    $pdf->Output("inventory_report.pdf", "D");
 }
 
 function AddPage($orientation='', $size='', $rotation=0)

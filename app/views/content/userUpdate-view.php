@@ -1,8 +1,6 @@
 <div class="container is-fluid mb-6">
 	<?php 
-
 		$id=$insLogin->limpiarCadena($url[1]);
-
 		if($id==$_SESSION['id']){ 
 	?>
 	<h1 class="title">Mi cuenta</h1>
@@ -14,11 +12,8 @@
 </div>
 <div class="container pb-6 pt-6">
 	<?php
-	
 		include "./app/views/inc/btn_back.php";
-
 		$datos=$insLogin->seleccionarDatos("Unico","usuario","usuario_id",$id);
-
 		if($datos->rowCount()==1){
 			$datos=$datos->fetch();
 	?>
@@ -45,13 +40,13 @@
 		<div class="columns">
 		  	<div class="column">
 		    	<div class="control">
-					<label>Nombres <?php echo CAMPO_OBLIGATORIO; ?></label>
+					<label>Nombres *</label>
 				  	<input class="input" type="text" name="usuario_nombre" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,40}" maxlength="40" value="<?php echo $datos['usuario_nombre']; ?>" required >
 				</div>
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
-					<label>Apellidos<?php echo CAMPO_OBLIGATORIO; ?></label>
+					<label>Apellidos *</label>
 				  	<input class="input" type="text" name="usuario_apellido" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,40}" maxlength="40" value="<?php echo $datos['usuario_apellido']; ?>" required >
 				</div>
 		  	</div>
@@ -59,7 +54,7 @@
 		<div class="columns">
 		  	<div class="column">
 		    	<div class="control">
-					<label>Usuario <?php echo CAMPO_OBLIGATORIO; ?></label>
+					<label>Usuario *</label>
 				  	<input class="input" type="text" name="usuario_usuario" pattern="[a-zA-Z0-9]{4,20}" maxlength="20" value="<?php echo $datos['usuario_usuario']; ?>" required >
 				</div>
 		  	</div>
@@ -70,7 +65,6 @@
 				</div>
 		  	</div>
 		</div>
-
 		<br><br>
 		<p class="has-text-centered">
 			SI desea actualizar la clave de este usuario por favor llene los 2 campos. Si NO desea actualizar la clave deje los campos vacíos.
@@ -79,14 +73,14 @@
 		<div class="columns">
 		  	<div class="column">
 		    	<div class="control">
-					<label>Nueva clave</label>
-				  	<input class="input" type="password" name="usuario_clave_1" pattern="[a-zA-Z0-9@]{7,100}" maxlength="100" >
+					<label>Nueva contraseña</label>
+				  	<input class="input" type="password" name="usuario_clave_1" pattern="[a-zA-Z0-9$@]{7,100}" maxlength="100" >
 				</div>
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
-					<label>Repetir nueva clave</label>
-				  	<input class="input" type="password" name="usuario_clave_2" pattern="[a-zA-Z0-9@]{7,100}" maxlength="100" >
+					<label>Repetir nueva contraseña</label>
+				  	<input class="input" type="password" name="usuario_clave_2" pattern="[a-zA-Z0-9$@]{7,100}" maxlength="100" >
 				</div>
 		  	</div>
 		</div>
@@ -97,14 +91,14 @@
 		<div class="columns">
 		  	<div class="column">
 		    	<div class="control">
-					<label>Usuario <?php echo CAMPO_OBLIGATORIO; ?></label>
+					<label>Usuario *</label>
 				  	<input class="input" type="text" name="administrador_usuario" pattern="[a-zA-Z0-9]{4,20}" maxlength="20" required >
 				</div>
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
-					<label>Clave <?php echo CAMPO_OBLIGATORIO; ?></label>
-				  	<input class="input" type="password" name="administrador_clave" pattern="[a-zA-Z0-9@]{7,100}" maxlength="100" required >
+					<label>Contraseña *</label>
+				  	<input class="input" type="password" name="administrador_clave" pattern="[a-zA-Z0-9$@]{7,100}" maxlength="100" required >
 				</div>
 		  	</div>
 		</div>
@@ -112,7 +106,7 @@
 			<button type="submit" class="button is-success is-rounded"><i class="fas fa-sync-alt"></i> &nbsp; Actualizar</button>
 		</p>
 		<p class="has-text-centered pt-6">
-            <small>Los campos marcados con <?php echo CAMPO_OBLIGATORIO; ?> son obligatorios</small>
+            <small>Los campos marcados con * son obligatorios</small>
         </p>
 	</form>
 	<?php

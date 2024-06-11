@@ -25,12 +25,10 @@
 
 		/*----------  Funcion ejecutar consultas  ----------*/
 		protected function ejecutarConsulta($consulta){
-			$sql = $this->conectar()->prepare($consulta);
-			echo $consulta; // Agregar esta línea para depurar
+			$sql=$this->conectar()->prepare($consulta);
 			$sql->execute();
 			return $sql;
 		}
-		
 
 
 		/*----------  Funcion limpiar cadenas  ----------*/
