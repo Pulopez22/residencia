@@ -7,8 +7,12 @@
 
 		/*---------- Controlador buscar codigo de producto ----------*/
         public function buscarCodigoVentaControlador() {
+			// Limpiar el valor del código de búsqueda
 			$producto = $this->limpiarCadena($_POST['buscar_codigo']);
+			
+			// Verificar si el valor está vacío
 			if ($producto == "") {
+				// Devolver un mensaje de advertencia si el campo está vacío
 				return '<article class="message is-warning mt-4 mb-4">
 					<div class="message-header">
 						<p>¡Ocurrió un error inesperado!</p>
@@ -18,10 +22,13 @@
 						Debes introducir el Nombre, Marca o Modelo del producto
 					</div>
 				</article>';
-				exit();
+				exit(); // Terminar la ejecución del script
 			}
+			
+			// Realizar la consulta para buscar productos que coincidan con el término de búsqueda
+			$datos_productos = $this->ejecutarConsulta("SELECT * FROM producto WHERE (producto_nombre LIKE '%$producto%' OR producto_marca LIKE '%$producto%') ORDER BY producto_nombre ASC");
 		
-			$datos_productos = $this->ejecutarConsulta("SELECT * FROM producto WHERE (producto_nombre LIKE '%$producto%' OR producto_marca LIKE '%$producto%' OR producto_modelo LIKE '%$producto%') ORDER BY producto_nombre ASC");
+			// Verificar si se encontraron productos
 			if ($datos_productos->rowCount() >= 1) {
 				$datos_productos = $datos_productos->fetchAll();
 				$tabla = '<div class="table-container mb-6"><table class="table is-striped is-narrow is-hoverable is-fullwidth"><tbody>';
@@ -47,32 +54,13 @@
 				</article>';
 				exit();
 			}
-		}		
+		}
+		
 
         /*---------- Controlador agregar producto a venta ----------*/
 		public function agregarProductoCarritoControlador() {
 			$codigo = $this->limpiarCadena($_POST['producto_codigo']);
-			if ($codigo == "") {
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "Debes introducir el código de barras del producto",
-					"icono" => "error"
-				];
-				return json_encode($alerta);
-				exit();
-			}
 		
-			if ($this->verificarDatos("[a-zA-Z0-9 ]{1,70}", $codigo)) {
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "El código de barras no coincide con el formato esperado",
-					"icono" => "error"
-				];
-				return json_encode($alerta);
-				exit();
-			}
 
             /*== Comprobando producto en la DB ==*/
             $check_producto=$this->ejecutarConsulta("SELECT * FROM producto WHERE producto_codigo='$codigo'");
@@ -96,7 +84,7 @@
 
                 $detalle_cantidad=1;
 
-                $stock_total=$campos['producto_stock_total']-$detalle_cantidad;
+                $stock_total=$campos['producto_stock_total']+$detalle_cantidad;
 
                 if($stock_total<0){
                     $alerta=[
@@ -127,7 +115,7 @@
             }else{
                 $detalle_cantidad=($_SESSION['datos_producto_venta'][$codigo]['venta_detalle_cantidad'])+1;
 
-                $stock_total=$campos['producto_stock_total']-$detalle_cantidad;
+                $stock_total=$campos['producto_stock_total']+$detalle_cantidad;
 
                 if($stock_total<0){
                     $alerta=[
@@ -201,17 +189,7 @@
             $codigo=$this->limpiarCadena($_POST['producto_codigo']);
             $cantidad=$this->limpiarCadena($_POST['producto_cantidad']);
 
-            /*== comprobando campos vacios ==*/
-            if($codigo=="" || $cantidad==""){
-            	$alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"No podemos actualizar la cantidad de productos debido a que faltan algunos parámetros de configuración",
-					"icono"=>"error"
-				];
-				return json_encode($alerta);
-		        exit();
-            }
+          
 
             /*== comprobando cantidad de productos ==*/
             if($cantidad<=0){
@@ -263,7 +241,7 @@
 
                 $detalle_cantidad=$cantidad;
 
-                $stock_total=$campos['producto_stock_total']-$detalle_cantidad;
+                $stock_total=$campos['producto_stock_total']+$detalle_cantidad;
 
                 if($stock_total<0){
                     $alerta=[
@@ -311,365 +289,277 @@
 
         /*---------- Controlador registrar venta ----------*/
         public function registrarVentaControlador(){
+		
+			// Obtén el nombre del usuario de la sesión
+			$usuario_nombre = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Desconocido';
 
-            // Verificar si se proporciona un valor para caja y cliente
-    		$caja = isset($_POST['venta_caja']) ? $this->limpiarCadena($_POST['venta_caja']) : null;
-    		$venta_pagado = $this->limpiarCadena($_POST['venta_abono']);
-
-            /*== Comprobando integridad de los datos ==*/
-            if($this->verificarDatos("[0-9.]{1,25}",$venta_pagado)){
-				$alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"El total pagado por el cliente no coincide con el formato solicitado",
-					"icono"=>"error"
+			 // Verificar si se han recibido los datos del formulario de venta
+			 if($_SERVER["REQUEST_METHOD"] !== "POST") {
+				// No se han recibido datos del formulario de venta, retornar un mensaje de error
+				$alerta = [
+					"tipo" => "simple",
+					"titulo" => "Ocurrió un error inesperado",
+					"texto" => "No se han recibido los datos del formulario de venta",
+					"icono" => "error"
 				];
 				return json_encode($alerta);
-		        exit();
-            }
+			}
+			
+				/*== Comprobando integridad de los datos ==*/
+				if ($_SESSION['venta_total'] <= 0 || (!isset($_SESSION['datos_producto_venta']) || count($_SESSION['datos_producto_venta']) <= 0)) {
+					$alerta = [
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "No ha agregado productos a esta venta",
+						"icono" => "error"
+					];
+					return json_encode($alerta);
+					exit();
+				}
+			
+				/*== Formateando variables ==*/
+				$venta_total = number_format($_SESSION['venta_total'], MONEDA_DECIMALES, '.', '');
+			
+				$venta_fecha = date("Y-m-d");
+				$venta_hora = date("h:i a");
+			
+				$venta_total_final = $venta_total;
+				$venta_total_final = number_format($venta_total_final, MONEDA_DECIMALES, '.', '');
+			
+				/*== Actualizando productos ==*/
+				$errores_productos = 0;
+				foreach($_SESSION['datos_producto_venta'] as $productos){
+			
+					/*== Obteniendo datos del producto ==*/
+					$check_producto = $this->ejecutarConsulta("SELECT * FROM producto WHERE producto_id='".$productos['producto_id']."' AND producto_codigo='".$productos['producto_codigo']."'");
+					if($check_producto->rowCount() < 1){
+						$errores_productos = 1;
+						break;
+					} else {
+						$datos_producto = $check_producto->fetch();
+					}
+			
+					/*== Respaldando datos de BD para poder restaurar en caso de errores ==*/
+					$_SESSION['datos_producto_venta'][$productos['producto_codigo']]['producto_stock_total'] = $datos_producto['producto_stock_total'] + $_SESSION['datos_producto_venta'][$productos['producto_codigo']]['venta_detalle_cantidad'];
+			
+					$_SESSION['datos_producto_venta'][$productos['producto_codigo']]['producto_stock_total_old'] = $datos_producto['producto_stock_total'];
+			
+					/*== Preparando datos para enviarlos al modelo ==*/
+					$datos_producto_up = [
+						[
+							"campo_nombre" => "producto_stock_total",
+							"campo_marcador" => ":Stock",
+							"campo_valor" => $_SESSION['datos_producto_venta'][$productos['producto_codigo']]['producto_stock_total']
+						]
+					];
+			
+					$condicion = [
+						"condicion_campo" => "producto_id",
+						"condicion_marcador" => ":ID",
+						"condicion_valor" => $productos['producto_id']
+					];
+			
+					/*== Actualizando producto ==*/
+					if(!$this->actualizarDatos("producto", $datos_producto_up, $condicion)){
+						$errores_productos = 1;
+						break;
+					}
+				}
+			
+				/*== Reestableciendo DB debido a errores ==*/
+				if($errores_productos == 1){
+			
+					foreach($_SESSION['datos_producto_venta'] as $producto){
+			
+						$datos_producto_rs = [
+							[
+								"campo_nombre" => "producto_stock_total",
+								"campo_marcador" => ":Stock",
+								"campo_valor" => $producto['producto_stock_total_old']
+							]
+						];
+			
+						$condicion = [
+							"condicion_campo" => "producto_id",
+							"condicion_marcador" => ":ID",
+							"condicion_valor" => $producto['producto_id']
+						];
+			
+						$this->actualizarDatos("producto", $datos_producto_rs, $condicion);
+					}
+			
+					$alerta = [
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "No hemos podido actualizar los productos en el sistema",
+						"icono" => "error"
+					];
+					return json_encode($alerta);
+					exit();
+				}	
+		
+			/*== generando codigo de venta ==*/
+			$correlativo = $this->ejecutarConsulta("SELECT venta_id FROM venta");
+			$correlativo = ($correlativo->rowCount()) + 1;
+			$codigo_venta = $this->generarCodigoAleatorio(10, $correlativo);
+		
+			// Convertir el ID del usuario a un entero para asegurarse de que sea un número válido
+			$usuario_nombre = isset($_SESSION['id']) ? intval($_SESSION['id']) : 0;
 
-            if($_SESSION['venta_total']<=0 || (!isset($_SESSION['datos_producto_venta']) && count($_SESSION['datos_producto_venta'])<=0)){
-				$alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"No ha agregado productos a esta venta",
-					"icono"=>"error"
-				];
-				return json_encode($alerta);
-		        exit();
-            }
 
-
-            /*== Formateando variables ==*/
-            $venta_pagado=number_format($venta_pagado,MONEDA_DECIMALES,'.','');
-            $venta_total=number_format($_SESSION['venta_total'],MONEDA_DECIMALES,'.','');
-
-            $venta_fecha=date("Y-m-d");
-            $venta_hora=date("h:i a");
-
-            $venta_total_final=$venta_total;
-            $venta_total_final=number_format($venta_total_final,MONEDA_DECIMALES,'.','');
-
-
-            /*== Calculando el cambio ==*/
-            if($venta_pagado<$venta_total_final){
-                $alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"Esta es una venta al contado, el total a pagar por el cliente no puede ser menor al total a pagar",
-					"icono"=>"error"
-				];
-				return json_encode($alerta);
-		        exit();
-            }
-
-            $venta_cambio=$venta_pagado-$venta_total_final;
-            $venta_cambio=number_format($venta_cambio,MONEDA_DECIMALES,'.','');
-
-
-            /*== Calculando total en caja ==*/
-            $movimiento_cantidad=$venta_pagado-$venta_cambio;
-            $movimiento_cantidad=number_format($movimiento_cantidad,MONEDA_DECIMALES,'.','');
-
-            $total_caja=$datos_caja['caja_efectivo']+$movimiento_cantidad;
-            $total_caja=number_format($total_caja,MONEDA_DECIMALES,'.','');
-
-
-            /*== Actualizando productos ==*/
-            $errores_productos=0;
-			foreach($_SESSION['datos_producto_venta'] as $productos){
-
-                /*== Obteniendo datos del producto ==*/
-                $check_producto=$this->ejecutarConsulta("SELECT * FROM producto WHERE producto_id='".$productos['producto_id']."' AND producto_codigo='".$productos['producto_codigo']."'");
-                if($check_producto->rowCount()<1){
-                    $errores_productos=1;
-                    break;
-                }else{
-                    $datos_producto=$check_producto->fetch();
-                }
-
-                /*== Respaldando datos de BD para poder restaurar en caso de errores ==*/
-                $_SESSION['datos_producto_venta'][$productos['producto_codigo']]['producto_stock_total']=$datos_producto['producto_stock_total']-$_SESSION['datos_producto_venta'][$productos['producto_codigo']]['venta_detalle_cantidad'];
-
-                $_SESSION['datos_producto_venta'][$productos['producto_codigo']]['producto_stock_total_old']=$datos_producto['producto_stock_total'];
-
-                /*== Preparando datos para enviarlos al modelo ==*/
-                $datos_producto_up=[
-                    [
-						"campo_nombre"=>"producto_stock_total",
-						"campo_marcador"=>":Stock",
-						"campo_valor"=>$_SESSION['datos_producto_venta'][$productos['producto_codigo']]['producto_stock_total']
+			/*== Preparando datos para enviarlos al modelo ==*/
+				$datos_venta_reg = [
+					[
+						"campo_nombre" => "venta_codigo",
+						"campo_marcador" => ":Codigo",
+						"campo_valor" => $codigo_venta
+					],
+					[
+						"campo_nombre" => "venta_fecha",
+						"campo_marcador" => ":Fecha",
+						"campo_valor" => $venta_fecha
+					],
+					[
+						"campo_nombre" => "venta_hora",
+						"campo_marcador" => ":Hora",
+						"campo_valor" => $venta_hora
+					],
+					[
+						"campo_nombre" => "venta_total",
+						"campo_marcador" => ":Total",
+						"campo_valor" => $venta_total_final
+					],
+					[
+						"campo_nombre" => "usuario_id",
+						"campo_marcador" => ":Usuario",
+						"campo_valor" => $usuario_nombre  // Cambiado de $_SESSION['id'] a $usuario_nombre
 					]
-                ];
+				];
 
-                $condicion=[
-                    "condicion_campo"=>"producto_id",
-                    "condicion_marcador"=>":ID",
-                    "condicion_valor"=>$productos['producto_id']
-                ];
 
-                /*== Actualizando producto ==*/
-                if(!$this->actualizarDatos("producto",$datos_producto_up,$condicion)){
-                    $errores_productos=1;
-                    break;
-                }
-            }
-
-            /*== Reestableciendo DB debido a errores ==*/
-            if($errores_productos==1){
-
-                foreach($_SESSION['datos_producto_venta'] as $producto){
-
-                    $datos_producto_rs=[
-                        [
-							"campo_nombre"=>"producto_stock_total",
-							"campo_marcador"=>":Stock",
-							"campo_valor"=>$producto['producto_stock_total_old']
+		
+			/*== Agregando venta ==*/
+			$agregar_venta = $this->guardarDatos("venta", $datos_venta_reg);
+		
+			if($agregar_venta->rowCount() != 1){
+				foreach($_SESSION['datos_producto_venta'] as $producto){
+		
+					$datos_producto_rs = [
+						[
+							"campo_nombre" => "producto_stock_total",
+							"campo_marcador" => ":Stock",
+							"campo_valor" => $producto['producto_stock_total_old']
 						]
-                    ];
-
-                    $condicion=[
-                        "condicion_campo"=>"producto_id",
-                        "condicion_marcador"=>":ID",
-                        "condicion_valor"=>$producto['producto_id']
-                    ];
-
-                    $this->actualizarDatos("producto",$datos_producto_rs,$condicion);
-                }
-
-                $alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"No hemos podido actualizar los productos en el sistema",
-					"icono"=>"error"
+					];
+		
+					$condicion = [
+						"condicion_campo" => "producto_id",
+						"condicion_marcador" => ":ID",
+						"condicion_valor" => $producto['producto_id']
+					];
+		
+					$this->actualizarDatos("producto", $datos_producto_rs, $condicion);
+				}
+		
+				$alerta = [
+					"tipo" => "simple",
+					"titulo" => "Ocurrió un error inesperado",
+					"texto" => "No hemos podido registrar la venta, por favor intente nuevamente. Código de error: 001",
+					"icono" => "error"
 				];
 				return json_encode($alerta);
-		        exit();
-            }
-
-            /*== generando codigo de venta ==*/
-            $correlativo=$this->ejecutarConsulta("SELECT venta_id FROM venta");
-			$correlativo=($correlativo->rowCount())+1;
-            $codigo_venta=$this->generarCodigoAleatorio(10,$correlativo);
-
-            /*== Preparando datos para enviarlos al modelo ==*/
-			$datos_venta_reg=[
-				[
-					"campo_nombre"=>"venta_codigo",
-					"campo_marcador"=>":Codigo",
-					"campo_valor"=>$codigo_venta
-				],
-				[
-					"campo_nombre"=>"venta_fecha",
-					"campo_marcador"=>":Fecha",
-					"campo_valor"=>$venta_fecha
-				],
-				[
-					"campo_nombre"=>"venta_hora",
-					"campo_marcador"=>":Hora",
-					"campo_valor"=>$venta_hora
-				],
-				[
-					"campo_nombre"=>"venta_total",
-					"campo_marcador"=>":Total",
-					"campo_valor"=>$venta_total_final
-				],
-				[
-					"campo_nombre"=>"venta_pagado",
-					"campo_marcador"=>":Pagado",
-					"campo_valor"=>$venta_pagado
-				],
-				[
-					"campo_nombre"=>"venta_cambio",
-					"campo_marcador"=>":Cambio",
-					"campo_valor"=>$venta_cambio
-				],
-				[
-					"campo_nombre"=>"usuario_id",
-					"campo_marcador"=>":Usuario",
-					"campo_valor"=>$_SESSION['id']
-				]
-            ];
-
-            /*== Agregando venta ==*/
-            $agregar_venta=$this->guardarDatos("venta",$datos_venta_reg);
-
-            if($agregar_venta->rowCount()!=1){
-                foreach($_SESSION['datos_producto_venta'] as $producto){
-
-                    $datos_producto_rs=[
-                        [
-							"campo_nombre"=>"producto_stock_total",
-							"campo_marcador"=>":Stock",
-							"campo_valor"=>$producto['producto_stock_total_old']
-						]
-                    ];
-
-                    $condicion=[
-                        "condicion_campo"=>"producto_id",
-                        "condicion_marcador"=>":ID",
-                        "condicion_valor"=>$producto['producto_id']
-                    ];
-
-                    $this->actualizarDatos("producto",$datos_producto_rs,$condicion);
-                }
-
-                $alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"No hemos podido registrar la venta, por favor intente nuevamente. Código de error: 001",
-					"icono"=>"error"
-				];
-				return json_encode($alerta);
-		        exit();
-            }
-
-            /*== Agregando detalles de la venta ==*/
-            $errores_venta_detalle=0;
-            foreach($_SESSION['datos_producto_venta'] as $venta_detalle){
-
-                /*== Preparando datos para enviarlos al modelo ==*/
-                $datos_venta_detalle_reg=[
-                	[
-						"campo_nombre"=>"venta_detalle_cantidad",
-						"campo_marcador"=>":Cantidad",
-						"campo_valor"=>$venta_detalle['venta_detalle_cantidad']
+				exit();
+			}
+		
+			/*== Agregando detalles de la venta ==*/
+			$errores_venta_detalle = 0;
+			foreach($_SESSION['datos_producto_venta'] as $venta_detalle){
+		
+				/*== Preparando datos para enviarlos al modelo ==*/
+				$datos_venta_detalle_reg = [
+					[
+						"campo_nombre" => "venta_detalle_cantidad",
+						"campo_marcador" => ":Cantidad",
+						"campo_valor" => $venta_detalle['venta_detalle_cantidad']
 					],
 					[
-						"campo_nombre"=>"venta_detalle_precio_compra",
-						"campo_marcador"=>":PrecioCompra",
-						"campo_valor"=>$venta_detalle['venta_detalle_precio_compra']
+						"campo_nombre" => "venta_detalle_precio_compra",
+						"campo_marcador" => ":PrecioCompra",
+						"campo_valor" => $venta_detalle['venta_detalle_precio_compra']
 					],
 					[
-						"campo_nombre"=>"venta_detalle_total",
-						"campo_marcador"=>":Total",
-						"campo_valor"=>$venta_detalle['venta_detalle_total']
+						"campo_nombre" => "venta_detalle_total",
+						"campo_marcador" => ":Total",
+						"campo_valor" => $venta_detalle['venta_detalle_total']
 					],
 					[
-						"campo_nombre"=>"venta_detalle_descripcion",
-						"campo_marcador"=>":Descripcion",
-						"campo_valor"=>$venta_detalle['venta_detalle_descripcion']
+						"campo_nombre" => "venta_detalle_descripcion",
+						"campo_marcador" => ":Descripcion",
+						"campo_valor" => $venta_detalle['venta_detalle_descripcion']
 					],
 					[
-						"campo_nombre"=>"venta_codigo",
-						"campo_marcador"=>":VentaCodigo",
-						"campo_valor"=>$codigo_venta
+						"campo_nombre" => "venta_codigo",
+						"campo_marcador" => ":VentaCodigo",
+						"campo_valor" => $codigo_venta
 					],
 					[
-						"campo_nombre"=>"producto_id",
-						"campo_marcador"=>":Producto",
-						"campo_valor"=>$venta_detalle['producto_id']
+						"campo_nombre" => "producto_id",
+						"campo_marcador" => ":Producto",
+						"campo_valor" => $venta_detalle['producto_id']
 					]
-                ];
-
-                $agregar_detalle_venta=$this->guardarDatos("venta_detalle",$datos_venta_detalle_reg);
-
-                if($agregar_detalle_venta->rowCount()!=1){
-                    $errores_venta_detalle=1;
-                    break;
-                }
-            }
-
-            /*== Reestableciendo DB debido a errores ==*/
-            if($errores_venta_detalle==1){
-
-                $this->eliminarRegistro("venta_detalle","venta_codigo",$codigo_venta);
-                $this->eliminarRegistro("venta","venta_codigo",$codigo_venta);
-
-                foreach($_SESSION['datos_producto_venta'] as $producto){
-
-                    $datos_producto_rs=[
-                        [
-							"campo_nombre"=>"producto_stock_total",
-							"campo_marcador"=>":Stock",
-							"campo_valor"=>$producto['producto_stock_total_old']
+				];
+		
+				$agregar_detalle_venta = $this->guardarDatos("venta_detalle", $datos_venta_detalle_reg);
+		
+				if($agregar_detalle_venta->rowCount() != 1){
+					$errores_venta_detalle = 1;
+					break;
+				}
+			}
+		
+			if($errores_venta_detalle == 1){
+				$this->eliminarDatos("venta", "venta_codigo", $codigo_venta);
+				foreach($_SESSION['datos_producto_venta'] as $producto){
+		
+					$datos_producto_rs = [
+						[
+							"campo_nombre" => "producto_stock_total",
+							"campo_marcador" => ":Stock",
+							"campo_valor" => $producto['producto_stock_total_old']
 						]
-                    ];
-
-                    $condicion=[
-                        "condicion_campo"=>"producto_id",
-                        "condicion_marcador"=>":ID",
-                        "condicion_valor"=>$producto['producto_id']
-                    ];
-
-                    $this->actualizarDatos("producto",$datos_producto_rs,$condicion);
-                }
-
-                $alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"No hemos podido registrar la venta, por favor intente nuevamente. Código de error: 002",
-					"icono"=>"error"
+					];
+		
+					$condicion = [
+						"condicion_campo" => "producto_id",
+						"condicion_marcador" => ":ID",
+						"condicion_valor" => $producto['producto_id']
+					];
+		
+					$this->actualizarDatos("producto", $datos_producto_rs, $condicion);
+				}
+		
+				$alerta = [
+					"tipo" => "simple",
+					"titulo" => "Ocurrió un error inesperado",
+					"texto" => "No hemos podido registrar la venta, por favor intente nuevamente. Código de error: 002",
+					"icono" => "error"
 				];
 				return json_encode($alerta);
-		        exit();
-            }
-
-            /*== Actualizando efectivo en caja ==*/
-            $datos_caja_up=[
-                [
-					"campo_nombre"=>"caja_efectivo",
-					"campo_marcador"=>":Efectivo",
-					"campo_valor"=>$total_caja
-				]
-            ];
-
-            $condicion_caja=[
-                "condicion_campo"=>"caja_id",
-                "condicion_marcador"=>":ID",
-                "condicion_valor"=>$caja
-            ];
-
-            if(!$this->actualizarDatos("caja",$datos_caja_up,$condicion_caja)){
-
-                $this->eliminarRegistro("venta_detalle","venta_codigo",$codigo_venta);
-                $this->eliminarRegistro("venta","venta_codigo",$codigo_venta);
-
-                foreach($_SESSION['datos_producto_venta'] as $producto){
-
-                    $datos_producto_rs=[
-                        [
-							"campo_nombre"=>"producto_stock_total",
-							"campo_marcador"=>":Stock",
-							"campo_valor"=>$producto['producto_stock_total_old']
-						]
-                    ];
-
-                    $condicion=[
-                        "condicion_campo"=>"producto_id",
-                        "condicion_marcador"=>":ID",
-                        "condicion_valor"=>$producto['producto_id']
-                    ];
-
-                    $this->actualizarDatos("producto",$datos_producto_rs,$condicion);
-                }
-
-                $alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"No hemos podido registrar la venta, por favor intente nuevamente. Código de error: 003",
-					"icono"=>"error"
-				];
-				return json_encode($alerta);
-		        exit();
-
-            }
-
-            /*== Vaciando variables de sesion ==*/
-            unset($_SESSION['venta_total']);
-            unset($_SESSION['datos_producto_venta']);
-
-            $_SESSION['venta_codigo_factura']=$codigo_venta;
-
-            $alerta=[
-				"tipo"=>"recargar",
-				"titulo"=>"¡Venta registrada!",
-				"texto"=>"La venta se registró con éxito en el sistema",
-				"icono"=>"success"
+				exit();
+			}
+		
+			// Reseteamos la variable de sesion
+			unset($_SESSION['datos_producto_venta']);
+			unset($_SESSION['venta_total']);
+		
+			$alerta = [
+				"tipo" => "recargar",
+				"titulo" => "¡Venta registrada!",
+				"texto" => "La compra se registró con éxito",
+				"icono" => "success"
 			];
 			return json_encode($alerta);
-	        exit();
-        }
+		}
 
 
         /*----------  Controlador listar venta  ----------*/
@@ -687,20 +577,24 @@
 			$pagina = (isset($pagina) && $pagina>0) ? (int) $pagina : 1;
 			$inicio = ($pagina>0) ? (($pagina * $registros)-$registros) : 0;
 
-			$campos_tablas="venta.venta_id,venta.venta_codigo,venta.venta_fecha,venta.venta_hora,venta.venta_total,venta.usuario_id,venta.cliente_id,venta.caja_id,usuario.usuario_id,usuario.usuario_nombre,usuario.usuario_apellido,cliente.cliente_id,cliente.cliente_nombre,cliente.cliente_apellido";
-
+			$campos_tablas="venta.venta_id,venta.venta_codigo,venta.venta_fecha,venta.venta_hora,venta.venta_total,venta.usuario_id,usuario.usuario_nombre,usuario.usuario_apellido";
+			
 			if(isset($busqueda) && $busqueda!=""){
 
 				$consulta_datos="SELECT $campos_tablas FROM venta INNER JOIN cliente ON venta.cliente_id=cliente.cliente_id INNER JOIN usuario ON venta.usuario_id=usuario.usuario_id WHERE (venta.venta_codigo='$busqueda') ORDER BY venta.venta_id DESC LIMIT $inicio,$registros";
-
+			
 				$consulta_total="SELECT COUNT(venta_id) FROM venta WHERE (venta.venta_codigo='$busqueda')";
-
+			
 			}else{
-
-				$consulta_datos="SELECT $campos_tablas FROM venta INNER JOIN cliente ON venta.cliente_id=cliente.cliente_id INNER JOIN usuario ON venta.usuario_id=usuario.usuario_id ORDER BY venta.venta_id DESC LIMIT $inicio,$registros";
-
+			
+				// Eliminar la referencia a la columna caja_id
+				$campos_tablas = str_replace("venta.caja_id,", "", $campos_tablas);
+			
+				// Modificar la consulta para que la unión sea correcta
+				$consulta_datos="SELECT $campos_tablas FROM venta INNER JOIN usuario ON venta.usuario_id=usuario.usuario_id ORDER BY venta.venta_id DESC LIMIT $inicio,$registros";
+			
 				$consulta_total="SELECT COUNT(venta_id) FROM venta";
-
+			
 			}
 
 			$datos = $this->ejecutarConsulta($consulta_datos);
@@ -719,6 +613,7 @@
 		                    <th class="has-text-centered">NRO.</th>
 		                    <th class="has-text-centered">Codigo</th>
 		                    <th class="has-text-centered">Fecha</th>
+		                    <th class="has-text-centered">Quien realizo la compra</th>
 		                    <th class="has-text-centered">Total</th>
 		                    <th class="has-text-centered">Opciones</th>
 		                </tr>
@@ -739,13 +634,7 @@
 							<td>'.MONEDA_SIMBOLO.number_format($rows['venta_total'],MONEDA_DECIMALES,MONEDA_SEPARADOR_DECIMAL,MONEDA_SEPARADOR_MILLAR).' '.MONEDA_NOMBRE.'</td>
 			                <td>
 
-			                	<button type="button" class="button is-link is-outlined is-rounded is-small btn-sale-options" onclick="print_invoice(\''.APP_URL.'app/pdf/invoice.php?code='.$rows['venta_codigo'].'\')" title="Imprimir factura Nro. '.$rows['venta_id'].'" >
-	                                <i class="fas fa-file-invoice-dollar fa-fw"></i>
-	                            </button>
-
-                                <button type="button" class="button is-link is-outlined is-rounded is-small btn-sale-options" onclick="print_ticket(\''.APP_URL.'app/pdf/ticket.php?code='.$rows['venta_codigo'].'\')" title="Imprimir ticket Nro. '.$rows['venta_id'].'" >
-                                    <i class="fas fa-receipt fa-fw"></i>
-                                </button>
+		
 
 			                    <a href="'.APP_URL.'saleDetail/'.$rows['venta_codigo'].'/" class="button is-link is-rounded is-small" title="Informacion de venta Nro. '.$rows['venta_id'].'" >
 			                    	<i class="fas fa-shopping-bag fa-fw"></i>

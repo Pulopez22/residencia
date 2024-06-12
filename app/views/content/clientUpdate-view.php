@@ -26,33 +26,67 @@
 		<div class="columns">
 		  	<div class="column">
 		    	<div class="control">
-					<label>Nombres <?php echo CAMPO_OBLIGATORIO; ?></label>
+					<label>Nombres *</label>
 				  	<input class="input" type="text" name="cliente_nombre" value="<?php echo $datos['cliente_nombre']; ?>" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,40}" maxlength="40" required >
 				</div>
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
-					<label>Apellidos <?php echo CAMPO_OBLIGATORIO; ?></label>
-				  	<input class="input" type="text" name="cliente_apellido" value="<?php echo $datos['cliente_apellido']; ?>" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,40}" maxlength="40" required >
+					<label>Apellidos </label>
+				  	<input class="input" type="text" name="cliente_apellido" value="<?php echo $datos['cliente_apellido']; ?>" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,40}" maxlength="40" >
 				</div>
 		  	</div>
 		</div>
 		<div class="columns">
-		  	<div class="column">
-		    	<div class="control">
-					<label>Estado, provincia o departamento <?php echo CAMPO_OBLIGATORIO; ?></label>
-				  	<input class="input" type="text" name="cliente_provincia" value="<?php echo $datos['cliente_provincia']; ?>" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{4,30}" maxlength="30" required >
+		<div class="column">
+		<div class="control">
+			<label>Estado *</label>
+			<select class="input" name="cliente_provincia" required>
+				<option value="" disabled selected>Selecciona un estado</option>
+				<option value="Aguascalientes">Aguascalientes</option>
+				<option value="Baja California">Baja California</option>
+				<option value="Baja California Sur">Baja California Sur</option>
+				<option value="Campeche">Campeche</option>
+				<option value="Chiapas">Chiapas</option>
+				<option value="Chihuahua">Chihuahua</option>
+				<option value="Coahuila">Coahuila</option>
+				<option value="Colima">Colima</option>
+				<option value="Ciudad de México">Ciudad de México</option>
+				<option value="Durango">Durango</option>
+				<option value="Guanajuato">Guanajuato</option>
+				<option value="Guerrero">Guerrero</option>
+				<option value="Hidalgo">Hidalgo</option>
+				<option value="Jalisco">Jalisco</option>
+				<option value="México">México</option>
+				<option value="Michoacán">Michoacán</option>
+				<option value="Morelos">Morelos</option>
+				<option value="Nayarit">Nayarit</option>
+				<option value="Nuevo León">Nuevo León</option>
+				<option value="Oaxaca">Oaxaca</option>
+				<option value="Puebla">Puebla</option>
+				<option value="Querétaro">Querétaro</option>
+				<option value="Quintana Roo">Quintana Roo</option>
+				<option value="San Luis Potosí">San Luis Potosí</option>
+				<option value="Sinaloa">Sinaloa</option>
+				<option value="Sonora">Sonora</option>
+				<option value="Tabasco">Tabasco</option>
+				<option value="Tamaulipas">Tamaulipas</option>
+				<option value="Tlaxcala">Tlaxcala</option>
+				<option value="Veracruz">Veracruz</option>
+				<option value="Yucatán">Yucatán</option>
+				<option value="Zacatecas">Zacatecas</option>
+				</select>
 				</div>
-		  	</div>
+			</div>
 		  	<div class="column">
 		    	<div class="control">
-					<label>Ciudad o pueblo <?php echo CAMPO_OBLIGATORIO; ?></label>
+					<label>Ciudad *</label>
 				  	<input class="input" type="text" name="cliente_ciudad" value="<?php echo $datos['cliente_ciudad']; ?>" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{4,30}" maxlength="30" required >
 				</div>
 		  	</div>
 		  	<div class="column">
 		    	<div class="control">
-					<label>Calle o dirección de casa <?php echo CAMPO_OBLIGATORIO; ?></label>
+					<label>Calle *</label>
 				  	<input class="input" type="text" name="cliente_direccion" value="<?php echo $datos['cliente_direccion']; ?>" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{4,70}" maxlength="70" required >
 				</div>
 		  	</div>
@@ -61,13 +95,13 @@
 		  	<div class="column">
 			  	<div class="control">
 					<label>Teléfono</label>
-				  	<input class="input" type="text" name="cliente_telefono" maxlength="10" required title="Debe contener 10 dígitos numéricos" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+				  	<input class="input" type="text" name="cliente_telefono" value="<?php echo $datos['cliente_telefono']; ?>"  pattern="[0-9]{10}" required title="Debe contener 10 dígitos numéricos" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
 				</div>
 		  	</div>
 		  	<div class="column">
 			  	<div class="control">
 					<label>RFC</label>
-				  	<input class="input" type="text" name="cliente_email" pattern="[A-Z0-9]{13}" maxlength="13" required title="Debe contener 13 caracteres alfanuméricos" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+				  	<input class="input" type="text" name="cliente_email" value="<?php echo $datos['cliente_email']; ?>" pattern="[A-Z0-9]{13}" maxlength="13" required title="Debe contener 13 caracteres alfanuméricos" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
 				</div>
 		  	</div>
 		</div>

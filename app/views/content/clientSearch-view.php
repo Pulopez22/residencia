@@ -1,6 +1,6 @@
 <div class="container is-fluid mb-6">
-    <h1 class="title">Clientes</h1>
-    <h2 class="subtitle"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar clientes</h2>
+    <h1 class="title">Proveedor</h1>
+    <h2 class="subtitle"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar proveedores</h2>
 </div>
 
 <div class="container pb-6 pt-6">

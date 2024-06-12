@@ -29,22 +29,19 @@ formularios_ajax.forEach(formulario => {
 
                 fetch(action, config)
                     .then(respuesta => {
-                        console.log('Estado de la respuesta:', respuesta.status); // Depuración
-                        if (respuesta.ok) {
-                            return respuesta.json(); // Intentar analizar la respuesta como JSON
-                        } else {
+                        if (!respuesta.ok) {
                             return respuesta.text().then(text => {
                                 throw new Error('La solicitud no pudo completarse correctamente. Código de estado: ' + respuesta.status + ' - ' + text);
                             });
                         }
+                        return respuesta.json();
                     })
                     .then(respuesta => {
                         console.log('Respuesta del servidor:', respuesta); // Depuración
                         alertas_ajax(respuesta);
                     })
                     .catch(error => {
-                        console.error('Error en la solicitud fetch:', error); // Manejo de errores
-                        // Mostrar un mensaje de error con SweetAlert
+                        console.error('Error en la solicitud fetch:', error); 
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
@@ -58,70 +55,80 @@ formularios_ajax.forEach(formulario => {
 });
 
 function alertas_ajax(alerta) {
+    console.log('Tipo de dato de la alerta:', typeof alerta); // Depuración
+    console.log('Alerta recibida:', alerta); // Añadir depuración
+
+    if (typeof alerta === 'string') {
+        try {
+            alerta = JSON.parse(alerta);
+        } catch (error) {
+            console.error('Error al parsear JSON:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al procesar la respuesta del servidor: ' + error.message,
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+    }
+
     if (alerta && alerta.tipo) {
-        if (alerta.tipo === "simple") {
-            Swal.fire({
-                icon: alerta.icono,
-                title: alerta.titulo,
-                text: alerta.texto,
-                confirmButtonText: 'Aceptar'
-            });
-        } else if (alerta.tipo === "recargar") {
-            Swal.fire({
-                icon: alerta.icono,
-                title: alerta.titulo,
-                text: alerta.texto,
-                confirmButtonText: 'Aceptar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    location.reload();
-                }
-            });
-        } else if (alerta.tipo === "limpiar") {
-            Swal.fire({
-                icon: alerta.icono,
-                title: alerta.titulo,
-                text: alerta.texto,
-                confirmButtonText: 'Aceptar'
-            }).then((result) => {
-                if (result.isConfirmed) {
+        switch (alerta.tipo) {
+            case "simple":
+                Swal.fire({
+                    icon: alerta.icono,
+                    title: alerta.titulo,
+                    text: alerta.texto,
+                    confirmButtonText: 'Aceptar'
+                });
+                break;
+            case "limpiar":
+                Swal.fire({
+                    icon: 'success',
+                    title: alerta.titulo,
+                    text: alerta.texto,
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
                     document.querySelector(".FormularioAjax").reset();
-                }
-            });
-        } else if (alerta.tipo === "redireccionar") {
-            window.location.href = alerta.url;
+                });
+                break;
+            case "recargar":
+                Swal.fire({
+                    icon: 'success',
+                    title: alerta.titulo,
+                    text: alerta.texto,
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    location.reload();
+                });
+                break;
+            case "redireccionar":
+                Swal.fire({
+                    icon: 'success',
+                    title: alerta.titulo,
+                    text: alerta.texto,
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    window.location.href = alerta.url;
+                });
+                break;
+            default:
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error inesperado al procesar la respuesta del servidor.',
+                    confirmButtonText: 'Aceptar'
+                });
+                console.error('Tipo de alerta desconocido:', alerta.tipo); // Añadir depuración
         }
     } else {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Ocurrió un error inesperado al procesar la respuesta del servidor.',
+            text: 'La respuesta del servidor no tiene el formato esperado.',
             confirmButtonText: 'Aceptar'
         });
-        console.error('La respuesta no es válida:', alerta);
+        console.error('Alerta malformada:', alerta); // Añadir depuración
     }
 }
-
-/* Boton cerrar sesion */
-let btn_exit = document.querySelectorAll(".btn-exit");
-
-btn_exit.forEach(exitSystem => {
-    exitSystem.addEventListener("click", function(e) {
-        e.preventDefault();
-        Swal.fire({
-            title: '¿Quieres salir del sistema?',
-            text: "La sesión actual se cerrará y saldrás del sistema",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Si, salir',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                let url = this.getAttribute("href");
-                window.location.href = url;
-            }
-        });
-    });
-});

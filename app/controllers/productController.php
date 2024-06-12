@@ -9,7 +9,7 @@
 		public function registrarProductoControlador(){
 
 			# Almacenando datos#
-		    $codigo=$this->limpiarCadena($_POST['producto_codigo']);
+		    $codigo = isset($_POST['producto_codigo']) ? $this->limpiarCadena($_POST['producto_codigo']) : '';
 		    $nombre=$this->limpiarCadena($_POST['producto_nombre']);
 
 		    $precio_compra=$this->limpiarCadena($_POST['producto_precio_compra']);
@@ -21,7 +21,7 @@
 			$fecha_registro = date('Y-m-d H:i:s');  // Obtener la fecha y hora actuales
 
 		    # Verificando campos obligatorios #
-            if($codigo == "" || $nombre == "" || $precio_compra == "" || $stock == "" || $categoria == "" || $unidad == ""){
+            if($nombre == "" || $precio_compra == "" || $stock == "" || $categoria == "" || $unidad == ""){
 				$alerta=[
 					"tipo"=>"simple",
 					"titulo"=>"Ocurrió un error inesperado",
@@ -29,22 +29,11 @@
 					"icono"=>"error"
 				];
 				return json_encode($alerta);
-		        exit();
-            }
+				exit();
+			}
+		
 
-            # Verificando integridad de los datos #
-		    if($this->verificarDatos("[a-zA-Z0-9]{1,77}",$codigo)){
-		    	$alerta=[
-					"tipo"=>"simple",
-					"titulo"=>"Ocurrió un error inesperado",
-					"texto"=>"El CODIGO no coincide con el formato solicitado",
-					"icono"=>"error"
-				];
-				return json_encode($alerta);
-		        exit();
-		    }
-
-		    if($this->verificarDatos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ()]{1,100}",$nombre)){
+		    if($this->verificarDatos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ() ]{1,100}",$nombre)){
 		    	$alerta=[
 					"tipo"=>"simple",
 					"titulo"=>"Ocurrió un error inesperado",
@@ -372,24 +361,19 @@
 			// Devolver los detalles de los productos por categoría
 			return $inventoryDetailsByCategory;
 		}
-		
-		
 
 		/*----------  Controlador listar producto  ----------*/
 		public function listarProductoControlador($pagina, $registros, $url, $busqueda, $categoria) {
-			// Iniciar la sesión si no está ya iniciada
 			if (session_status() == PHP_SESSION_NONE) {
 				session_start();
 			}
-		
-			// Obtener el nombre del usuario de la sesión   
-			$usuario_nombre = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Desconocido';
 		
 			// Limpiar las entradas
 			$pagina = $this->limpiarCadena($pagina);
 			$registros = $this->limpiarCadena($registros);
 			$categoria = $this->limpiarCadena($categoria);
 			$url = $this->limpiarCadena($url);
+			$busqueda = $this->limpiarCadena($busqueda);
 		
 			// Construir URL según la categoría
 			if ($categoria > 0) {
@@ -398,7 +382,6 @@
 				$url = APP_URL . $url . "/";
 			}
 		
-			$busqueda = $this->limpiarCadena($busqueda);
 			$tabla = '<div class="table-container"><table class="table is-striped is-hoverable is-narrow">
 						<thead>
 							<tr>
@@ -409,7 +392,6 @@
 								<th>Categoría</th>
 								<th>Modificado Por</th>
 								<th>Último Movimiento</th>';
-			// Añadir encabezado de acciones si hay una búsqueda
 			if (isset($busqueda) && $busqueda != "") {
 				$tabla .= '<th>Acciones</th>';
 			}
@@ -417,14 +399,11 @@
 					</thead>
 					<tbody>';
 		
-			// Calcular el inicio de la paginación
 			$pagina = (isset($pagina) && $pagina > 0) ? (int) $pagina : 1;
 			$inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 		
-			// Definir los campos a seleccionar
 			$campos = "producto.producto_id, producto.producto_codigo, producto.producto_nombre, producto_stock_total, producto.producto_foto, categoria.categoria_nombre, producto.fecha_registro AS fechas_registro, producto.usuario_modificacion";
 		
-			// Construir consultas según la búsqueda y categoría
 			if (isset($busqueda) && $busqueda != "") {
 				$consulta_datos = "SELECT $campos FROM producto INNER JOIN categoria ON producto.categoria_id=categoria.categoria_id WHERE producto_codigo LIKE '%$busqueda%' OR producto_nombre LIKE '%$busqueda%' OR producto_marca LIKE '%$busqueda%' ORDER BY producto_nombre ASC LIMIT $inicio, $registros";
 				$consulta_total = "SELECT COUNT(producto_id) FROM producto WHERE producto_codigo LIKE '%$busqueda%' OR producto_nombre LIKE '%$busqueda%' OR producto_marca LIKE '%$busqueda%'";
@@ -436,21 +415,19 @@
 				$consulta_total = "SELECT COUNT(producto_id) FROM producto";
 			}
 		
-			// Ejecutar consultas
 			$datos = $this->ejecutarConsulta($consulta_datos);
 			$datos = $datos->fetchAll();
 		
 			$total = $this->ejecutarConsulta($consulta_total);
 			$total = (int) $total->fetchColumn();
 		
-			// Calcular número de páginas
 			$numeroPaginas = ceil($total / $registros);
 		
 			if ($total >= 1 && $pagina <= $numeroPaginas) {
 				$contador = $inicio + 1;
 				$pag_inicio = $inicio + 1;
 				foreach ($datos as $rows) {
-					$usuario_modificacion = ($rows['fechas_registro'] != $rows['usuario_modificacion']) ? $rows['usuario_modificacion'] : $usuario_nombre;
+					$usuario_modificacion = !empty($rows['usuario_modificacion']) ? $rows['usuario_modificacion'] : '';
 		
 					$tabla .= '<tr>
 									<td><img src="' . (is_file("./app/views/productos/" . $rows['producto_foto']) ? (APP_URL . 'app/views/productos/' . $rows['producto_foto']) : (APP_URL . 'app/views/productos/default.png')) . '" class="product-image is-rounded" style="max-width: 80px;"></td>
@@ -460,7 +437,6 @@
 									<td>' . $rows['categoria_nombre'] . '</td>
 									<td>' . $usuario_modificacion . '</td>
 									<td>' . $rows['fechas_registro'] . '</td>';
-					// Agregar botones de acciones solo si hay una
 					if (isset($busqueda) && $busqueda != "") {
 						$tabla .= '<td>
 										<div class="buttons">
@@ -481,48 +457,46 @@
 									</td>';
 					}
 					$tabla .= '</tr>';
-					
+		
 					$contador++;
-					}
-					$pag_final = $contador - 1;
-					} else {
-					if ($total >= 1) {
-						$tabla .= '
-									<tr>
-										<td colspan="8" class="has-text-centered"><i class="far fa-hand-point-down fa-5x"></i></td>
-									</tr>
-									<tr>
-										<td colspan="8" class="has-text-centered">
-											<a href="' . $url . '1/" class="button is-link is-rounded is-small mt-4 mb-4">
-												Haga clic acá para recargar el listado
-											</a>
-										</td>
-									</tr>';
-					} else {
-						$tabla .= '
-									<tr>
-										<td colspan="8" class="has-text-centered"><i class="far fa-grin-beam-sweat fa-5x"></i></td>
-									</tr>
-									<tr>
-										<td colspan="8" class="has-text-centered">No hay productos registrados en esta categoría</td>
-									</tr>';
-					}
-					}
-					
-					$tabla .= '</tbody></table></div>';
-
-					$tabla = '<div class="table-container" style="margin: 0 auto; width: 80%;">' . $tabla . '</div>';
-
-					### Paginacion ###
-					if ($total > 0 && $pagina <= $numeroPaginas) {
-    				$tabla .= '<p class="has-text-right">Mostrando productos <strong>' . $pag_inicio . '</strong> al <strong>' . $pag_final . '</strong> de un <strong>total de ' . $total . '</strong></p>';
-    				$tabla .= $this->paginadorTablas($pagina, $numeroPaginas, $url, 7);
-						}
-
-					return $tabla;
-
-					}		
-	
+				}
+				$pag_final = $contador - 1;
+			} else {
+				if ($total >= 1) {
+					$tabla .= '
+								<tr>
+									<td colspan="8" class="has-text-centered"><i class="far fa-hand-point-down fa-5x"></i></td>
+								</tr>
+								<tr>
+									<td colspan="8" class="has-text-centered">
+										<a href="' . $url . '1/" class="button is-link is-rounded is-small mt-4 mb-4">
+											Haga clic acá para recargar el listado
+										</a>
+									</td>
+								</tr>';
+				} else {
+					$tabla .= '
+								<tr>
+									<td colspan="8" class="has-text-centered"><i class="far fa-grin-beam-sweat fa-5x"></i></td>
+								</tr>
+								<tr>
+									<td colspan="8" class="has-text-centered">No hay productos registrados en esta categoría</td>
+								</tr>';
+				}
+			}
+		
+			$tabla .= '</tbody></table></div>';
+		
+			$tabla = '<div class="table-container" style="margin: 0 auto; width: 80%;">' . $tabla . '</div>';
+		
+			if ($total > 0 && $pagina <= $numeroPaginas) {
+				$tabla .= '<p class="has-text-right">Mostrando productos <strong>' . $pag_inicio . '</strong> al <strong>' . $pag_final . '</strong> de un <strong>total de ' . $total . '</strong></p>';
+				$tabla .= $this->paginadorTablas($pagina, $numeroPaginas, $url, 7);
+			}
+		
+			return $tabla;
+		}
+				
 
 		/*----------  Controlador eliminar producto  ----------*/
 		public function eliminarProductoControlador(){
@@ -587,16 +561,45 @@
 
 
 		/*----------  Controlador actualizar producto  ----------*/
-		public function actualizarProductoControlador() {
-			// Asegúrate de que la sesión esté iniciada
-			session_start();
+		public function actualizarProducto($producto_id, $datos) {
+			if (session_status() == PHP_SESSION_NONE) {
+				session_start();
+			}
 		
-			// Obtén el nombre del usuario de la sesión
+			// Obtener el nombre del usuario de la sesión
+			$usuario_nombre = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Desconocido';
+		
+			// Construir la consulta de actualización
+			$consulta = "UPDATE producto SET
+							producto_codigo = :codigo,
+							producto_nombre = :nombre,
+							producto_stock_total = :stock,
+							categoria_id = :categoria,
+							usuario_modificacion = :usuario_modificacion
+						 WHERE producto_id = :id";
+		
+			// Preparar y ejecutar la consulta
+			$stmt = $this->db->prepare($consulta);
+			$stmt->bindParam(':codigo', $datos['codigo']);
+			$stmt->bindParam(':nombre', $datos['nombre']);
+			$stmt->bindParam(':stock', $datos['stock']);
+			$stmt->bindParam(':categoria', $datos['categoria']);
+			$stmt->bindParam(':usuario_modificacion', $usuario_nombre);
+			$stmt->bindParam(':id', $producto_id);
+			$stmt->execute();
+		}
+		
+		public function manejarActualizacionProducto() {
+			if (session_status() == PHP_SESSION_NONE) {
+				session_start();
+			}
+		
+			// Obtener el nombre del usuario de la sesión
 			$usuario_nombre = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Desconocido';
 		
 			$id = $this->limpiarCadena($_POST['producto_id']);
 		
-			// Verifica el producto
+			// Verificar el producto
 			$datos = $this->ejecutarConsulta("SELECT * FROM producto WHERE producto_id='$id'");
 			if ($datos->rowCount() <= 0) {
 				$alerta = [
@@ -613,10 +616,27 @@
 			// Almacena los nuevos datos del producto
 			$nombre = $this->limpiarCadena($_POST['producto_nombre']);
 			$precio_compra = $this->limpiarCadena($_POST['producto_precio_compra']);
-			$stock = $this->limpiarCadena($_POST['producto_stock']);
+			$nuevo_stock = $this->limpiarCadena($_POST['producto_stock']);
 		
-			# Verificando campos obligatorios #
-			if($nombre == "" || $precio_compra == "" || $stock == ""){
+			// Obtener el stock actual del producto
+			$stock_actual = $datos['producto_stock_total'];
+		
+			// Resto el stock actual con el nuevo stock para obtener el nuevo stock total
+			$nuevo_stock_total = $stock_actual - $nuevo_stock;
+		
+			// Verificar que el nuevo stock total sea mayor o igual que cero
+			if ($nuevo_stock_total < 0) {
+				$alerta = [
+					"tipo" => "simple",
+					"titulo" => "Ocurrió un error inesperado",
+					"texto" => "El nuevo stock total no puede ser negativo",
+					"icono" => "error"
+				];
+				return json_encode($alerta);
+			}
+		
+			// Verificando campos obligatorios
+			if ($nombre == "" || $precio_compra == "" || $nuevo_stock == "") {
 				$alerta = [
 					"tipo" => "simple",
 					"titulo" => "Ocurrió un error inesperado",
@@ -626,8 +646,8 @@
 				return json_encode($alerta);
 			}
 		
-			# Verificando integridad de los datos #
-			if($this->verificarDatos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,100}", $nombre)){
+			// Verificando integridad de los datos
+			if ($this->verificarDatos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,100}", $nombre)) {
 				$alerta = [
 					"tipo" => "simple",
 					"titulo" => "Ocurrió un error inesperado",
@@ -637,7 +657,7 @@
 				return json_encode($alerta);
 			}
 		
-			if($this->verificarDatos("[0-9.]{1,25}", $precio_compra)){
+			if ($this->verificarDatos("[0-9.]{1,25}", $precio_compra)) {
 				$alerta = [
 					"tipo" => "simple",
 					"titulo" => "Ocurrió un error inesperado",
@@ -647,7 +667,7 @@
 				return json_encode($alerta);
 			}
 		
-			if($this->verificarDatos("[0-9]{1,22}", $stock)){
+			if ($this->verificarDatos("[0-9]{1,22}", $nuevo_stock)) {
 				$alerta = [
 					"tipo" => "simple",
 					"titulo" => "Ocurrió un error inesperado",
@@ -657,20 +677,9 @@
 				return json_encode($alerta);
 			}
 		
-			# Verificando stock total o existencias #
-			if($stock <= 0){
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "No puedes registrar un producto con stock o existencias en 0, debes de agregar al menos una unidad",
-					"icono" => "error"
-				];
-				return json_encode($alerta);
-			}
-		
-			# Comprobando precio de compra del producto #
+			// Comprobando precio de compra del producto
 			$precio_compra = number_format($precio_compra, MONEDA_DECIMALES, '.', '');
-			if($precio_compra <= 0){
+			if ($precio_compra <= 0) {
 				$alerta = [
 					"tipo" => "simple",
 					"titulo" => "Ocurrió un error inesperado",
@@ -680,10 +689,10 @@
 				return json_encode($alerta);
 			}
 		
-			# Comprobando nombre de producto #
-			if($datos['producto_nombre'] != $nombre){
+			// Comprobando nombre de producto
+			if ($datos['producto_nombre'] != $nombre) {
 				$check_nombre = $this->ejecutarConsulta("SELECT producto_nombre FROM producto WHERE producto_nombre='$nombre'");
-				if($check_nombre->rowCount() >= 1){
+				if ($check_nombre->rowCount() >= 1) {
 					$alerta = [
 						"tipo" => "simple",
 						"titulo" => "Ocurrió un error inesperado",
@@ -694,8 +703,8 @@
 				}
 			}
 		
-			# Aquí debes definir $fecha_registro, 
-			$fecha_registro = date("Y-m-d H:i:s"); 
+			// Definir fecha de registro
+			$fecha_registro = date("Y-m-d H:i:s");
 		
 			$producto_datos_up = [
 				[
@@ -706,7 +715,7 @@
 				[
 					"campo_nombre" => "producto_stock_total",
 					"campo_marcador" => ":Stock",
-					"campo_valor" => $stock
+					"campo_valor" => $nuevo_stock_total
 				],
 				[
 					"campo_nombre" => "producto_precio_compra",
@@ -748,7 +757,8 @@
 			}
 		
 			return json_encode($alerta);
-		}
+		}		
+					
 
 		/*----------  Controlador eliminar foto producto  ----------*/
 		public function eliminarFotoProductoControlador(){

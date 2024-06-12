@@ -25,10 +25,11 @@
         </div>
         <div class="columns">
             <div class="column">
-                <div class="control">
-                    <label>Usuario *</label>
-                    <input class="input" type="text" name="usuario_usuario" pattern="[a-zA-Z0-9]{4,20}" maxlength="20" required>
-                </div>
+            <div class="control">
+            <label>Usuario *</label>
+            <input class="input" type="text" name="usuario_usuario" pattern="[a-zA-Z0-9 ]{4,20}" maxlength="20" >
+        </div>
+
             </div>
             <div class="column">
                 <div class="control">
@@ -41,7 +42,7 @@
             <div class="column">
                 <div class="control">
                     <label>Contraseña *</label>
-                    <input class="input" type="password" name="usuario_clave_1" pattern="[a-zA-Z0-9$@]{7,100}" maxlength="100" required>
+                    <input class="input" type="password" name="usuario_clave_1" pattern="[a-zA-Z0-9$@]{7,100}" maxlength="100" required title="Debe contener 7 caracteres minimo " required placeholder="Minimo 7 caracteres">
                 </div>
             </div>
             <div class="column">

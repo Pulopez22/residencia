@@ -20,6 +20,8 @@
 			echo $insVenta->agregarProductoCarritoControlador();
         }
 
+
+
         /*--------- Remover producto de carrito ---------*/
 		if($_POST['modulo_venta']=="remover_producto"){
 			echo $insVenta->removerProductoCarritoControlador();
@@ -29,20 +31,15 @@
 		if($_POST['modulo_venta']=="actualizar_producto"){
 			echo $insVenta->actualizarProductoCarritoControlador();
 		}
-		
-		/*--------- Agregar cliente a carrito ---------*/
-		if($_POST['modulo_venta']=="agregar_cliente"){
-			echo $insVenta->agregarClienteVentaControlador();
-		}
-
-		/*--------- Remover cliente de carrito ---------*/
-		if($_POST['modulo_venta']=="remover_cliente"){
-			echo $insVenta->removerClienteVentaControlador();
-		}
 
 		/*--------- Registrar venta ---------*/
 		if($_POST['modulo_venta']=="registrar_venta"){
 			echo $insVenta->registrarVentaControlador();
+		}
+
+		/*--------- Listar venta ---------*/
+		if ($_POST['modulo_venta'] == "listar_venta") {
+			echo $insVenta->listarVentaControlador();
 		}
 
 		/*--------- Eliminar venta ---------*/

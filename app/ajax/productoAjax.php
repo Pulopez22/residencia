@@ -22,7 +22,7 @@
 				$response = $insProducto->eliminarProductoControlador();
 				break;
 			case "actualizar":
-				$response = $insProducto->actualizarProductoControlador();
+				$response = $insProducto->manejarActualizacionProducto();
 				break;
 			case "eliminarFoto":
 				$response = $insProducto->eliminarFotoProductoControlador();

@@ -12,14 +12,14 @@
         <div class="columns">
             <div class="column">
                 <div class="control">
-                    <label>Código de barra *</label>
-                    <input class="input" type="text" name="producto_codigo" pattern="[a-zA-Z0-9]{1,77}" maxlength="77" required>
+                    <label>Código de barra </label>
+                    <input class="input" type="text" name="producto_codigo" pattern="[a-zA-Z0-9]{1,77}" maxlength="77" >
                 </div>
             </div>
             <div class="column">
                 <div class="control">
                     <label>Nombre *</label>
-                    <input class="input" type="text" name="producto_nombre" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]{1,100}" maxlength="100" required>
+                    <input class="input" type="text" name="producto_nombre" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,100}" maxlength="100" required>
                 </div>
             </div>
         </div>

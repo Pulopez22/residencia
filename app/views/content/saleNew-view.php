@@ -1,6 +1,6 @@
 <div class="container is-fluid mb-6">
-	<h1 class="title">Ventas</h1>
-	<h2 class="subtitle"><i class="fas fa-cart-plus fa-fw"></i> &nbsp; Nueva venta</h2>
+	<h1 class="title">Compras</h1>
+	<h2 class="subtitle"><i class="fas fa-cart-plus fa-fw"></i> &nbsp; Nueva compra</h2>
 </div>
 
 <div class="container pb-6 pt-6">
@@ -15,7 +15,7 @@
         <div class="column pb-6">
 
             <p class="has-text-centered pt-6 pb-6">
-                <small>Para agregar productos debe de digitar el código de barras en el campo "Código de producto" y luego presionar &nbsp; <strong class="is-uppercase" ><i class="far fa-check-circle"></i> &nbsp; Agregar producto</strong>. También puede agregar el producto mediante la opción &nbsp; <strong class="is-uppercase"><i class="fas fa-search"></i> &nbsp; Buscar producto</strong>. Ademas puede escribir el código de barras y presionar la tecla <strong class="is-uppercase">enter</strong></small>
+                <small>Para agregar productos debe de digitar el código de barras en el campo "Código de barras" y luego presionar &nbsp; <strong class="is-uppercase" ><i class="far fa-check-circle"></i> &nbsp; Agregar producto</strong>. También puede agregar el producto mediante la opción &nbsp; <strong class="is-uppercase"><i class="fas fa-search"></i> &nbsp; Buscar producto</strong>. Ademas puede escribir el código de barras y presionar la tecla <strong class="is-uppercase">enter</strong></small>
             </p>
             <form class="pt-6 pb-6" id="sale-barcode-form" autocomplete="off">
                 <div class="columns">
@@ -50,20 +50,20 @@
             ?>
             <div class="notification is-info is-light mb-2 mt-2">
                 <h4 class="has-text-centered has-text-weight-bold">Venta realizada</h4>
-                <p class="has-text-centered mb-2">La venta se realizó con éxito. ¿Que desea hacer a continuación? </p>
+                <p class="has-text-centered mb-2">La compra se realizó con éxito. ¿Que desea hacer a continuación? </p>
                 <br>
                 <div class="container">
                     <div class="columns">
                         <div class="column has-text-centered">
                             <button type="button" class="button is-link is-light" onclick="print_ticket('<?php echo APP_URL."app/pdf/ticket.php?code=".$_SESSION['venta_codigo_factura']; ?>')" >
                                 <i class="fas fa-receipt fa-2x"></i> &nbsp;
-                                Imprimir ticket de venta
+                                Imprimir ticket de compra
                             </buttona>
                         </div>
                         <div class="column has-text-centered">
                             <button type="button" class="button is-link is-light" onclick="print_invoice('<?php echo APP_URL."app/pdf/invoice.php?code=".$_SESSION['venta_codigo_factura']; ?>')" >
                                 <i class="fas fa-file-invoice-dollar fa-2x"></i> &nbsp;
-                                Imprimir factura de venta
+                                Imprimir factura de compra
                             </button>
                         </div>
                     </div>
@@ -155,7 +155,7 @@
         </div>
 
         <div class="column is-one-quarter">
-            <h2 class="title has-text-centered">Datos de la venta</h2>
+            <h2 class="title has-text-centered">Datos de la compra</h2>
             <hr>
 
             <?php if($_SESSION['venta_total']>0){ ?>
@@ -172,16 +172,6 @@
 
                
                 <?php } ?>
-
-                <div class="control mb-5">
-                    <label>Total pagado por cliente <?php echo CAMPO_OBLIGATORIO; ?></label>
-                    <input class="input" type="text" name="venta_abono" id="venta_abono" value="0.00" pattern="[0-9.]{1,25}" maxlength="25" >
-                </div>
-
-                <div class="control mb-5">
-                    <label>Cambio devuelto a cliente</label>
-                    <input class="input" type="text" id="venta_cambio" value="0.00" readonly >
-                </div>
 
                 <h4 class="subtitle is-5 has-text-centered has-text-weight-bold mb-5"><small>TOTAL A PAGAR: <?php echo MONEDA_SIMBOLO.number_format($_SESSION['venta_total'],MONEDA_DECIMALES,MONEDA_SEPARADOR_DECIMAL,MONEDA_SEPARADOR_MILLAR)." ".MONEDA_NOMBRE; ?></small></h4>
 
@@ -208,7 +198,7 @@
         </header>
         <section class="modal-card-body">
             <div class="field mt-6 mb-6">
-                <label class="label">Nombre, marca, modelo</label>
+                <label class="label">¿Que deseas compras?</label>
                 <div class="control">
                     <input class="input" type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" name="input_codigo" id="input_codigo" maxlength="30" >
                 </div>
@@ -238,35 +228,29 @@
     });
 
 
-    /* Agregar producto */
-    function agregar_producto(){
-        let codigo_producto=document.querySelector('#sale-barcode-input').value;
+ /* Agregar producto */
+function agregar_producto() {
+    // Obtener el código del producto ingresado
+    let codigo_producto = document.querySelector('#sale-barcode-input').value.trim();
 
-        codigo_producto=codigo_producto.trim();
+    // Crear un objeto FormData para enviar los datos al servidor
+    let datos = new FormData();
+    datos.append("producto_codigo", codigo_producto);
+    datos.append("modulo_venta", "agregar_producto");
 
-        if(codigo_producto!=""){
-            let datos = new FormData();
-            datos.append("producto_codigo", codigo_producto);
-            datos.append("modulo_venta", "agregar_producto");
+    // Realizar la solicitud al servidor utilizando fetch
+    fetch('<?php echo APP_URL; ?>app/ajax/ventaAjax.php', {
+        method: 'POST',
+        body: datos
+    })
+    .then(respuesta => respuesta.json())
+    .then(respuesta => {
+        // Mostrar las alertas retornadas por el servidor
+        return alertas_ajax(respuesta);
+    });
+}
 
-            fetch('<?php echo APP_URL; ?>app/ajax/ventaAjax.php',{
-                method: 'POST',
-                body: datos
-            })
-            .then(respuesta => respuesta.json())
-            .then(respuesta =>{
-                return alertas_ajax(respuesta);
-            });
 
-        }else{
-            Swal.fire({
-                icon: 'error',
-                title: 'Ocurrió un error inesperado',
-                text: 'Debes de introducir el código del producto',
-                confirmButtonText: 'Aceptar'
-            });
-        }
-    }
 
 
     /*----------  Buscar codigo  ----------*/
